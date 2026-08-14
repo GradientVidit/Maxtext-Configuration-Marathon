@@ -1,0 +1,108 @@
+
+
+This is the densest section so far — MoE in MaxText has a lot of dials because it spans routing logic, kernel implementation choices, and sharding strategy all at once. Grouped by concern below.
+
+## Core MoE routing
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`num_experts`|Total number of experts in each MoE layer.|Integer, default `1` = effectively dense (MoE disabled).|
+|`num_experts_per_tok`|How many experts each token is routed to (top-k routing).|Integer, default `1`.|
+|`megablox`|Whether to use the MegaBlocks-style block-sparse matmul implementation for MoE.|`true`/`false`, default `true`.|
+|`sparse_matmul`|Whether to use sparse (as opposed to dense) matmul for MoE compute.|`true`/`false`, default `true`.|
+|`capacity_factor`|Multiplier on the "even split" expert capacity, controlling how much token-dropping is tolerated when routing is imbalanced.|Float, default `-1.0` = no dropping (each expert can absorb as many tokens as routed to it).|
+|`load_balance_loss_weight`|Weight of the auxiliary load-balancing loss that encourages even token distribution across experts.|Float, default `0.0` = disabled.|
+|`use_random_routing`|Routes tokens randomly instead of via the learned router — for debugging/testing routing infrastructure in isolation from routing quality.|`true`/`false`, default `false`.|
+|`norm_topk_prob`|Normalizes the top-k routing probabilities (Qwen3-specific router normalization).|`true`/`false`, default `false`.|
+
+## Buffer sizing & chunking (performance)
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`ragged_buffer_factor`|Controls the size of the ragged buffer that holds routed-MoE activations.|`-1.0` (default) = worst-case sized so no dropping ever occurs; `1.0` = sized assuming perfectly balanced routing (tokens dropped if routing is more imbalanced than that); any positive value = `balanced_size * ragged_buffer_factor`.|
+|`moe_expert_input_dim`|Feature dimension of tokens entering the MoE expert blocks.|Integer, default `-1` = inferred.|
+|`base_moe_mlp_dim`|Intermediate (hidden) dimension of the MoE MLP layer. For a fully-MoE model this must equal `base_mlp_dim`.|Integer, default `-1` = inferred.|
+|`num_moe_token_chunks`|Splits routed-MoE tokens into N chunks (used with the ring-of-experts path) so each chunk's expert-parallel all-gather/reduce-scatter overlaps the _previous_ chunk's GMM compute — a pipelining trick for hiding communication latency.|Integer, default `1` = disabled (identical to unchunked baseline).|
+|`moe_chunk_barrier`|Forces strictly sequential (non-interleaved) execution of the chunked ring-of-experts loop by fencing each chunk's input on the previous chunk's output. Math is unchanged (the barrier is a no-op for correctness) — purely a scheduling constraint. Only matters when `num_moe_token_chunks > 1` **and** `use_ring_of_experts=True`.|`true`/`false`, default `false`.|
+|`num_moe_emb_chunks`|Number of chunks used to overlap the token all-gather with GMM computation along the embedding dimension.|Integer, default `0` = disabled.|
+
+## Expert-parallel routing mechanics
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`use_custom_sort_vjp`|Uses a custom VJP (backward-pass rule) for the token sort operation in sparse matmul, for backward-pass efficiency.|`true`/`false`, default `true`.|
+|`use_ring_of_experts`|Enables the "ring of experts" strategy for sparse-matmul expert parallelism — experts are visited in a ring pattern across devices rather than an all-to-all gather.|`true`/`false`, default `false`.|
+|`moe_dispatch_no_expert_sharding`|When `true`, peels the `expert` mesh axis off the MoE dispatch/MLP batch dimension so the expert GEMM stays properly expert-parallel (AllToAll-based); when `false`, `expert` stays on the batch dim (`activation_batch_moe`). Only affects the dense (`dense_matmul`) MoE path — the sparse (`shard_map`) path is unaffected.|`true`/`false`, default `false`.|
+|`use_batch_split_schedule`|Splits the batch into micro-batches to hide all-to-all communication behind compute when using expert parallelism. Currently only implemented for DeepSeek sparse layers.|`true`/`false`, default `false`.|
+|`batch_split_factor`|The factor by which to split the batch. Only used when `use_batch_split_schedule=true`.|Integer, default `1`.|
+
+## Ragged-kernel tuning (SparseCore / Pallas)
+
+These control the low-level kernels used for MoE's ragged (variable-size-per-expert) operations — mostly performance-tuning knobs you'd touch when optimizing throughput on specific hardware, not correctness knobs.
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`use_ragged_sort`|Uses Pallas ragged-sort kernels in the MoE permute path. Valid with or without `use_ring_of_experts` (given EP > 1); runs inside `permute`/`unpermute` when ring-of-experts is on, or `local_permute`/local-unpermute otherwise.|`true`/`false`, default `false`.|
+|`use_gather_mosaic_kernel`|Uses a custom Mosaic kernel for token gather operations.|`true`/`false`, default `false`.|
+|`ragged_gather_fallback`|Forces the plain JAX reference implementation instead of the SparseCore ragged-gather kernel.|`true`/`false`, default `false` (use the SparseCore kernel).|
+|`ragged_gather_reduce_fallback`|Same, but for the ragged-gather-_reduce_ kernel specifically.|`true`/`false`, default `false`.|
+|`ragged_gather_cost_estimate_flops`|Manual override for the FLOP cost estimate XLA uses for the ragged gather kernel (affects scheduling/overlap decisions).|`-1` = auto-compute; any `>0` value overrides.|
+|`ragged_gather_reduce_cost_estimate_flops`|Same, for the ragged-gather-reduce kernel.|`-1` = auto-compute; `>0` overrides.|
+|`ragged_gather_cost_estimate_bytes_accessed`|Manual override for the bytes-accessed cost estimate of the ragged gather kernel.|`-1` = auto-compute; `>0` overrides.|
+|`ragged_gather_reduce_cost_estimate_bytes_accessed`|Same, for the reduce variant.|`-1` = auto-compute; `>0` overrides.|
+
+## GMM (Grouped Matrix Multiply) tiling
+
+Tunable tile dimensions for the MLP's grouped matmul (GMM) kernel — `wi` = the "up" projection weights, `wo` = the "down" projection weights. `fwd`/`dlhs`/`drhs` correspond to forward pass, and the two backward-pass matmul orientations (gradient w.r.t. left-hand-side and right-hand-side operands). The megablox/JAX ragged-dot backend only supports tuning the 6 forward-pass configs (`wi_tile_fwd_*`, `wo_tile_fwd_*`); the Tokamax ragged-dot backend supports all 18.
+
+|Param group|Purpose|Options / meaning|
+|---|---|---|
+|`wi_tile_fwd_batch_seq`, `wi_tile_fwd_embed_dim`, `wi_tile_fwd_mlp_dim`|Tile sizes for the "up" projection's forward pass, along batch-sequence, embedding, and MLP dimensions respectively.|Integers, all default `512`/`1024`/`1024`.|
+|`wi_tile_dlhs_batch_seq/embed_dim/mlp_dim`|Same, for the "up" projection's backward pass (LHS-gradient orientation).|Same defaults.|
+|`wi_tile_drhs_batch_seq/embed_dim/mlp_dim`|Same, for the "up" projection's backward pass (RHS-gradient orientation).|Same defaults.|
+|`wo_tile_fwd_batch_seq/embed_dim/mlp_dim`|Same three, for the "down" projection's forward pass.|Same defaults.|
+|`wo_tile_dlhs_batch_seq/embed_dim/mlp_dim`|Same, "down" projection backward (LHS).|Same defaults.|
+|`wo_tile_drhs_batch_seq/embed_dim/mlp_dim`|Same, "down" projection backward (RHS).|Same defaults.|
+
+These are the kind of parameters you'd sweep in a benchmarking harness rather than set by hand — good defaults for most cases, worth revisiting only when profiling shows the GMM kernel is a bottleneck at your specific model/hardware shape.
+
+## GMM implementation switches
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`merge_gating_gmm`|Merges the gating (routing) computation into the GMM kernel call itself, rather than as a separate step.|`true`/`false`, default `false`.|
+|`use_tokamax_gmm`|Uses the Tokamax library's GMM kernel implementation instead of the default.|`true`/`false`, default `false`.|
+|`use_gmm_v2`|Uses Tokamax's GMM v2 kernel. Requires `use_tokamax_gmm=true`.|`true`/`false`, default `false`.|
+
+## MoE sharding
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`moe_fsdp_use_two_stage_all_gather`|When MoE weight matrices are sharded on both the FSDP and FSDP-transpose axes, issues two separate all-gather calls rather than one combined one.|`true`/`false`, default `false`.|
+|`shard_exp_on_fsdp`|Shards the expert dimension of the MLP weights on the FSDP axis. Recommended only when `num_experts` is a multiple of the FSDP parallelism degree.|`true`/`false`, default `false`.|
+|`use_2d_fsdp_sharding`|Uses both the FSDP and FSDP-transpose axes to shard MoE weights (2D sharding rather than 1D).|`true`/`false`, default `false`.|
+
+## DeepSeek-style MoE routing
+
+Parameters specific to the DeepSeek family's MoE routing design (auxiliary-loss-free load balancing via a learnable bias, grouped routing, shared experts, etc.).
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`first_num_dense_layers`|Number of initial decoder layers that are plain dense (non-MoE) before MoE layers begin — DeepSeek-style models typically keep the first few layers dense.|Integer, default `0`.|
+|`shared_experts`|Number of "shared" experts that process every token in addition to the routed experts (DeepSeek-style shared-expert design).|Integer, default `0` = no shared experts.|
+|`routed_scaling_factor`|Scaling factor applied to routing scores.|Float, default `1.0`.|
+|`routed_score_func`|Which scoring function the router uses to compute routing scores.|String, default `""` (uses the architecture's built-in default).|
+|`routed_bias`|Whether a learnable bias is added to routing (DeepSeek-V3's auxiliary-loss-free load-balancing mechanism: a bias term nudges routing toward underused experts instead of relying on an aux loss).|`true`/`false`, default `false`.|
+|`routed_bias_update_rate`|The update rate applied to that learnable routing bias term.|Float, default `0.0`.|
+|`mlp_bias`|Whether a learnable bias is added to the MLP matmul. Originally added to support the GPT-OSS model architecture.|`true`/`false`, default `false`.|
+|`n_routing_groups`|Number of groups tokens are routed into before expert selection within each group (DeepSeek-style grouped routing, limits which experts a token can even be routed to).|Integer, default `-1` = disabled.|
+|`topk_routing_group`|Number of top-scoring groups to actually route inputs into (used together with `n_routing_groups`, relevant for expert parallelism).|Integer, default `-1`.|
+|`first_num_hash_layers`|Number of layers using hash-based routing (as opposed to learned routing) — a DeepSeek V4 feature.|Integer, default `0` = disabled.|
+
+## Notes to self
+
+- `num_experts=1` / `num_experts_per_tok=1` are the defaults — MoE is opt-in. A dense (non-MoE) model just leaves these at 1.
+- `capacity_factor=-1.0` and `ragged_buffer_factor=-1.0` both default to "never drop tokens, size for worst case" — the safe-but-more-memory-hungry choice. Tightening these (e.g. `capacity_factor` to a finite value, or `ragged_buffer_factor` toward `1.0`) trades some risk of token dropping for lower memory/compute overhead — a real lever if you're memory-constrained on a big MoE model.
+- The GMM tiling params (`wi_tile_*` / `wo_tile_*`) and the ragged-kernel cost-estimate overrides are squarely in "profile first, then tune" territory — not something to guess at without a benchmarking loop.
+- `routed_bias` is the DeepSeek-V3 "auxiliary-loss-free" load balancing trick — worth knowing it's an _alternative_ to `load_balance_loss_weight`, not something you'd necessarily combine with a large aux-loss weight.
+- This section is a good example of MaxText's general pattern: a compact set of "what the model does" params (routing, capacity) sitting alongside a much larger set of "how fast does it do it" params (kernel choice, tiling, chunking) — worth mentally separating the two when reading any MaxText config section.

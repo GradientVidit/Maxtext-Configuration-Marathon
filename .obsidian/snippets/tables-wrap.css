@@ -1,0 +1,32 @@
+/* Reading View */
+.markdown-rendered table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+}
+
+.markdown-rendered table th,
+.markdown-rendered table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.markdown-rendered table th:first-child,
+.markdown-rendered table td:first-child {
+    width: 30%;
+}
+
+/* Live Preview */
+.markdown-source-view.mod-cm6 .cm-table-widget table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+}
+
+.markdown-source-view.mod-cm6 .cm-table-widget th,
+.markdown-source-view.mod-cm6 .cm-table-widget td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}

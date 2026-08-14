@@ -1,0 +1,54 @@
+
+## Model shape
+
+This block sets the actual dimensions of the transformer — how big it is and how it's shaped.
+
+| Param                     | Purpose                                                                                                                                                                              | Options / meaning                                                                                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `decoder_block`           | Which decoder-layer _style/implementation_ to use — this selects the architecture family (attention type, norm placement, MLP style, etc.) that the rest of the model is built from. | String, default `"llama2"`. Other values correspond to other supported model families (e.g. `"gemma2"`, `"deepseek"`, `"mixtral"`, etc. — set indirectly via `model_name` presets in normal use). |
+| `weight_dtype`            | The dtype the model's **weights** are stored/computed in — separate from `dtype` (activations, Part 2) and `grad_dtype` (gradients, Part 2).                                         | String, default `"float32"`.                                                                                                                                                                      |
+| `global_parameter_scale`  | A single knob to scale up the whole model size at once (embed dim, heads, MLP dim, layers all scale together). Must be a power of 2.                                                 | Integer, default `1`. For finer control, set the individual `base_*` dims below explicitly instead.                                                                                               |
+| `base_emb_dim`            | The model's embedding/hidden dimension.                                                                                                                                              | Integer, default `2048`.                                                                                                                                                                          |
+| `base_num_query_heads`    | Number of attention query heads.                                                                                                                                                     | Integer, default `16`.                                                                                                                                                                            |
+| `base_num_kv_heads`       | Number of attention key/value heads. Equal to `base_num_query_heads` for standard MHA; smaller for GQA/MQA.                                                                          | Integer, default `16`.                                                                                                                                                                            |
+| `base_mlp_dim`            | The MLP (feed-forward) intermediate dimension.                                                                                                                                       | Integer, default `7168`.                                                                                                                                                                          |
+| `dense_init_scale`        | Scaling factor applied to weight initialization for dense layers.                                                                                                                    | Float, default `1.0`.                                                                                                                                                                             |
+| `base_num_decoder_layers` | Number of transformer decoder layers (depth of the model).                                                                                                                           | Integer, default `16`.                                                                                                                                                                            |
+| `head_dim`                | Dimension of each individual attention head.                                                                                                                                         | Integer, default `128`.                                                                                                                                                                           |
+| `attention_output_dim`    | Output dimension of the attention block's output projection.                                                                                                                         | Integer, default `-1` = infer automatically (typically `num_query_heads * head_dim`).                                                                                                             |
+| `global_head_dim`         | Head dimension used specifically for Gemma4's _global_ attention layers (Gemma4 mixes local/global attention with different head dims).                                              | Integer, default `0` (unused unless the model architecture calls for it).                                                                                                                         |
+| `global_num_kv_heads`     | KV head count for Gemma4's global attention layers.                                                                                                                                  | Integer, default `0` (same caveat as above).                                                                                                                                                      |
+
+## Activations, dropout, and logits precision
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`mlp_activations`|Which activation function(s) the MLP block uses, as an ordered list — supports gated activations (e.g. SwiGLU-style: one branch has the nonlinearity, the other is linear and they're multiplied together).|List of strings, default `["silu", "linear"]`.|
+|`mlp_activations_limit`|Caps/clips the MLP activation values to this magnitude.|Float, default `-1.0` = no limit.|
+|`dropout_rate`|Standard dropout rate applied within the model.|Float, default `0.0` (off) — most pretraining runs leave this at 0; dropout is more common in fine-tuning.|
+|`logits_via_embedding`|Whether to compute output logits by reusing (tying) the input embedding matrix, rather than a separate unembedding matrix.|`true`/`false`, default `false`.|
+|`normalize_embedding_logits`|When `logits_via_embedding=true`, whether to normalize the logits before softmax.|`true`/`false`, default `true`. Only relevant if the above is on.|
+|`logits_dot_in_fp32`|Whether the final logits dot-product (`logits_dense` or the tied-embedding dot) is computed in fp32 for numerical stability.|`true`/`false`, default `false`.|
+|`cast_logits_to_fp32`|Whether to cast the final logits to fp32 before the loss computation. Generally beneficial for stability, at some compute/memory cost.|`true`/`false`, default `true`.|
+|`float32_qk_product`|In dot-product attention, whether to cast Q·K inputs to fp32 before the matmul.|`true`/`false`, default `false`.|
+|`float32_logits`|In dot-product attention, whether to cast the attention logits to fp32 before the softmax.|`true`/`false`, default `false`.|
+|`mla_qk_head_chunk_size`|For MLA (Multi-head Latent Attention, covered in the attention part), sequentially evaluates the QK matrix across the unsharded local-heads dimension in chunks — trades a bit of speed to limit peak HBM usage.|Integer, default `0` = disabled (evaluate all heads at once).|
+|`float32_weight_sum`|For MoE, whether to sum the selected experts' weighted outputs in fp32 for numerical stability.|`true`/`false`, default `true`.|
+|`float32_gate_logits`|For MoE, whether to cast inputs to fp32 when computing the router/gate logits.|`true`/`false`, default `false`.|
+
+## Multi-Token Prediction (MTP)
+
+MTP adds auxiliary heads that predict multiple _future_ tokens (not just the next one) during training — inspired by DeepSeek-V3 — as an auxiliary loss to improve training efficiency/representation quality. It doesn't change what the model does at inference; it's a training-time-only signal.
+
+|Param|Purpose|Options / meaning|
+|---|---|---|
+|`mtp_num_layers`|Number of auxiliary MTP prediction layers/heads to add.|Integer, default `0` = feature disabled. Set > 0 to enable.|
+|`mtp_loss_scaling_factor`|The weight (λ) applied to the averaged MTP auxiliary loss when combining with the main loss: `main_loss + mtp_loss_scaling_factor * avg_mtp_loss`.|Float, default `0.1`.|
+|`mtp_eval_target_module`|Which MTP layer (1-indexed) to use for evaluation metrics like acceptance rate.|Integer, default `0` = disables this specific eval; `1` targets the first auxiliary head, etc.|
+
+## Notes to self
+
+- `global_parameter_scale` vs. explicit `base_*` dims is the same trade-off as always: the scale knob is convenient for quick "make it bigger" experiments, but real pretraining configs almost always set `base_emb_dim` / `base_num_query_heads` / `base_num_kv_heads` / `base_mlp_dim` / `base_num_decoder_layers` / `head_dim` explicitly to hit a specific target parameter count and shape.
+- `base_num_query_heads` vs `base_num_kv_heads`: equal = plain multi-head attention (MHA); `kv_heads < query_heads` = grouped-query attention (GQA); `kv_heads = 1` = multi-query attention (MQA). This file's defaults (16/16) are plain MHA.
+- The fp32-casting knobs (`logits_dot_in_fp32`, `cast_logits_to_fp32`, `float32_qk_product`, `float32_logits`, `float32_weight_sum`, `float32_gate_logits`) are all the same pattern repeated at different points in the forward pass: bf16 is fast but numerically risky at specific choke points (softmax inputs, final logits, MoE gating) — each flag is a scalpel to selectively raise precision only where it's shown to matter, without paying fp32 cost everywhere.
+- MTP is DeepSeek-V3-style — worth reading the DeepSeek-V3 paper's MTP section directly if you want the "why" beyond what these config comments give you.
