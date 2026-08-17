@@ -11,10 +11,14 @@
             "id": "560de2e01ffa633e",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "1. General Run Setup + Checkpointing.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "1. General Run Setup + Checkpointing"
             }
           }
         ]
@@ -186,24 +190,31 @@
   },
   "active": "560de2e01ffa633e",
   "lastOpenFiles": [
-    "Untitled.md",
-    "1. General Run Setup + Checkpointing.md",
-    "async_checkpointing.md",
-    "save_checkpoint_on_completion.md",
-    "save_checkpoint_on_start.md",
-    "normalization_layer_epsilon.md",
-    "enable_checkpointing.md",
-    "load_full_state_path.md",
-    "hf_lora_adapter_path.md",
+    "13. Qwen3-Next , mHC, Engram, Distillation, Elastic Training.md",
+    "12. Multimodal (Vision + Audio).md",
+    "11. Inference Serving + KV Cache Layout.md",
+    "10. RoPE, Eval-Decode, AOT Compilation & Monitoring.md",
+    "9. Training Loop, LR Schedule, Optimizer & Profiling.md",
+    "8. Tokenizer + Dataset & Data Pipeline.md",
+    "7. Hardware + Sharding or Mesh.md",
+    "6. Attention Mechanisms.md",
+    "5. Pipeline Parallelism + Rematerialization.md",
+    "weight_sparsity_m.md",
     "lora_input_adapters_path.md",
-    "load_parameters_path.md",
-    "4. Mixture of Experts (MoE).md",
-    "3. Core Model Architecture.md",
-    "2. Logging-Misc + Precision & Quantization.md",
-    "override_logical_axis_rules.md",
-    "run_name.md",
-    "override_model_config.md",
-    "model_name.md",
-    "Welcome.md"
+    "weight_sparsity_update_step.md",
+    "weight_sparsity_start_step.md",
+    "weight_sparsity_n.md",
+    "weight_quantization_calibration_method.md",
+    "wandb_run_name.md",
+    "wandb_project_name.md",
+    "use_qwix_quantization.md",
+    "use_manual_quantization.md",
+    "te_comm_gemm_overlap.md",
+    "source_checkpoint_layout.md",
+    "save_quantized_params_path.md",
+    "save_config_to_gcs.md",
+    "reuse_example_batch.md",
+    "replicate_quant_scale.md",
+    "quantize_kvcache.md"
   ]
 }
