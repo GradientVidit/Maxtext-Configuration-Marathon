@@ -4,49 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "c64b7b84dc155b66",
+        "id": "167579320c4c3a44",
         "type": "tabs",
         "children": [
           {
-            "id": "e3bc0eadcca190d3",
+            "id": "560de2e01ffa633e",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Core Model Architecture.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Core Model Architecture"
-            }
-          },
-          {
-            "id": "870a5a2c8a16468c",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "load_parameters_path.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "load_parameters_path"
-            }
-          },
-          {
-            "id": "d8725db7ee10aeb7",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "normalization_layer_epsilon.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "normalization_layer_epsilon"
+              "title": "New tab"
             }
           }
         ]
@@ -216,18 +184,26 @@
       "bases:Create new base": false
     }
   },
-  "active": "e3bc0eadcca190d3",
+  "active": "560de2e01ffa633e",
   "lastOpenFiles": [
+    "Untitled.md",
     "1. General Run Setup + Checkpointing.md",
-    "load_parameters_path.md",
-    "override_logical_axis_rules.md",
+    "async_checkpointing.md",
+    "save_checkpoint_on_completion.md",
+    "save_checkpoint_on_start.md",
     "normalization_layer_epsilon.md",
+    "enable_checkpointing.md",
+    "load_full_state_path.md",
+    "hf_lora_adapter_path.md",
+    "lora_input_adapters_path.md",
+    "load_parameters_path.md",
+    "4. Mixture of Experts (MoE).md",
+    "3. Core Model Architecture.md",
+    "2. Logging-Misc + Precision & Quantization.md",
+    "override_logical_axis_rules.md",
     "run_name.md",
     "override_model_config.md",
-    "Core Model Architecture.md",
     "model_name.md",
-    "Logging-Misc + Precision & Quantization.md",
-    "Mixture of Experts (MoE).md",
     "Welcome.md"
   ]
 }
