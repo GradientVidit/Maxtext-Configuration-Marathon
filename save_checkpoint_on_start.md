@@ -1,4 +1,3 @@
-
 ## 1. Why does it exist?
 
 Normally, checkpointing happens periodically:
@@ -54,6 +53,27 @@ It's particularly useful when you want a guaranteed starting checkpoint even if 
 
 ---
 
+## 2a. When used with `load_parameters_path` (fine-tuning)
+
+The step-0 checkpoint captures:
+- The **pretrained weights** (as loaded via `load_parameters_path`)
+- A **freshly initialized optimizer** (no Adam moments yet — those start accumulating from step 0 onward)
+- Step counter = 0
+
+This is valuable because it creates a MaxText-native Orbax checkpoint of the starting weights. Future runs can use this checkpoint directly as `load_parameters_path`, bypassing the original HF→Orbax conversion pipeline.
+
+```yaml
+# first run: convert + cache via step-0 checkpoint
+load_parameters_path: gs://bucket/hf_converted/orbax_ckpt
+save_checkpoint_on_start: true
+run_name: finetune_v1
+
+# future run: load the already-MaxText-format step-0 checkpoint
+load_parameters_path: gs://bucket/finetune_v1/checkpoints/0
+```
+
+---
+
 ## 3. `true` vs `false`
 
 |Value|Behavior|
@@ -64,7 +84,7 @@ It's particularly useful when you want a guaranteed starting checkpoint even if 
 Default:
 
 ```yaml
-save_checkpoint_on_start: false
+save_checkpoint_on_start: true
 ```
 
 ---
@@ -125,4 +145,4 @@ Neither controls periodic checkpointing; that's handled by `checkpoint_period`.
 
 ### One-line intuition
 
-> **`save_checkpoint_on_start=true` creates an initial checkpoint immediately when training begins, giving you a saved snapshot of the pre-training state.**
+> **`save_checkpoint_on_start: true` (the default) saves a checkpoint before the first training step — capturing either random init or loaded pretrained weights — giving you an unconditional baseline to roll back to.**

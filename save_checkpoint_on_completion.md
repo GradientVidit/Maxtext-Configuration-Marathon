@@ -1,4 +1,3 @@
-
 ## What problem does it solve?
 
 Suppose:
@@ -99,8 +98,11 @@ save_checkpoint_on_start   checkpoint_period   save_checkpoint_on_completion
 
 This is about **normal completion**.
 
-If your TPU job is suddenly killed/preempted, this flag isn't what protects you. That's what **periodic checkpointing** and, in newer MaxText, features such as `enable_autocheckpoint` are for. The current config separately defines autocheckpointing as saving at the preemption step. ([GitHub](https://github.com/AI-Hypercomputer/maxtext/blob/main/src/maxtext/configs/base.yml?utm_source=chatgpt.com "maxtext/src/maxtext/configs/base.yml at main · AI-Hypercomputer/maxtext · GitHub"))
+If your TPU job is suddenly killed/preempted, this flag is not triggered because the process does not reach its natural end-of-training loop. 
+
+- **Normal completion:** If the job finishes naturally at `steps` or `max_target_seconds`, `save_checkpoint_on_completion` ensures the final state is captured.
+- **Crash/Preemption:** If the job is terminated unexpectedly, the final state is only protected by your `checkpoint_period` interval (periodic saves), or by `enable_autocheckpoint: true` if enabled — which defaults to `false`.
 
 ### One-line intuition
 
-> **`save_checkpoint_on_completion=true` ensures MaxText saves the final training state when the job finishes, even if the final step isn't a regular `checkpoint_period` boundary.**
+> **`save_checkpoint_on_completion: true` (the default) ensures MaxText saves the final training state when the job finishes normally — preventing loss of progress between the last periodic checkpoint and the final step.**

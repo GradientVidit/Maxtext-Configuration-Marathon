@@ -88,10 +88,18 @@ For most production use cases (pretrained → fine-tune via MaxText), the recomm
 
 ```yaml
 checkpoint_conversion_fn: none             # default — no conversion, native Orbax
-checkpoint_conversion_fn: <fn_reference>   # a Python callable reference
+checkpoint_conversion_fn: maxtext.checkpoint_conversion.utils.safetensors_to_maxtext
 ```
 
-The function reference format depends on MaxText's internal config parsing — it's not a string of arbitrary Python; it's registered within the codebase.
+The value is a **dotted Python module path** to a callable in MaxText's codebase (not arbitrary user code). The function is called with the loaded checkpoint dict and returns a MaxText-compatible parameter pytree.
+
+A conversion function has a signature roughly like:
+
+```python
+def my_conversion_fn(checkpoint_dict: dict) -> dict:
+    # remap keys, reshape tensors
+    return maxtext_compatible_dict
+```
 
 ---
 

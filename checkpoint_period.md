@@ -51,7 +51,7 @@ The right `checkpoint_period` is a function of:
 | Step duration | Saving every N wall-clock minutes matters more than every N steps |
 | Storage cost | More frequent saves = more storage used (until `max_num_checkpoints_to_keep` prunes them) |
 
-A rough heuristic for large-scale TPU training: checkpoint at most every 10–30 minutes of wall-clock time. At 10K steps/period and roughly 1 step/second on a v4 pod, 10K steps ≈ 3 hours — meaning the default is actually quite infrequent and you'll often want to decrease it for preemptible hardware.
+A rough heuristic for large-scale TPU training: target checkpoints every **10–30 minutes of wall-clock time**. The right step count to achieve that depends on your step duration, which varies enormously (a step on a v4-8 with a 7B model is very different from a step on a v5p-512 with the same model). So size your `checkpoint_period` in wall-clock terms first, then convert to steps based on measured step time.
 
 ---
 
