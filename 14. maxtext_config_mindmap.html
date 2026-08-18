@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MaxText base.yml — config mind map</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222c; --border:#2a2f3a; --border-soft:#232732;
+    --text:#e7e9ee; --text-dim:#9aa1af; --text-faint:#6b7180;
+    --accent:#7aa2f7; --accent-dim:#3a4a6b;
+    --c1:#7f77dd; --c2:#1d9e75; --c3:#d85a30; --c4:#d4537e; --c5:#378add;
+    --c6:#639922; --c7:#ba7517; --c8:#e24b4a; --c9:#888780;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f7f7f5; --panel:#ffffff; --panel2:#f1f1ee; --border:#e0e0da; --border-soft:#ececE7;
+      --text:#1f2023; --text-dim:#5f5e5a; --text-faint:#8a8a84;
+      --accent:#185fa5; --accent-dim:#dbe8f7;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px; margin:0 auto;}
+  header{margin-bottom:20px;}
+  h1{font-size:19px; font-weight:600; margin:0 0 4px;}
+  .sub{font-size:13px; color:var(--text-dim); margin:0;}
+  .searchbar{
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    padding:14px 0 10px; margin-bottom:8px;
+  }
+  #search{
+    width:100%; padding:11px 14px; font-size:14px; border-radius:10px;
+    border:1px solid var(--border); background:var(--panel); color:var(--text);
+    outline:none;
+  }
+  #search:focus{border-color:var(--accent);}
+  .meta-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:var(--text-faint); margin-top:8px; gap:8px; flex-wrap:wrap;
+  }
+  .btnrow{display:flex; gap:6px;}
+  .btn{
+    font-size:12px; padding:5px 10px; border-radius:7px; border:1px solid var(--border);
+    background:var(--panel); color:var(--text-dim); cursor:pointer;
+  }
+  .btn:hover{color:var(--text); border-color:var(--text-faint);}
+  #nomatch{display:none; text-align:center; color:var(--text-faint); font-size:13px; padding:40px 0;}
+
+  .umbrella{
+    border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden;
+    background:var(--panel);
+  }
+  .umbrella.hidden{display:none;}
+  .u-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:13px 16px; cursor:pointer; user-select:none;
+  }
+  .u-head:hover{background:var(--panel2);}
+  .u-left{display:flex; align-items:center; gap:10px; min-width:0;}
+  .u-dot{width:9px; height:9px; border-radius:50%; flex:none;}
+  .u-name{font-size:14.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .u-count{
+    font-size:11px; color:var(--text-faint); background:var(--panel2);
+    border:1px solid var(--border-soft); padding:2px 8px; border-radius:20px; flex:none;
+  }
+  .chev{
+    font-size:11px; color:var(--text-faint); transition:transform .15s ease; flex:none;
+  }
+  .umbrella.open .chev{transform:rotate(90deg);}
+  .u-body{display:none; padding:0 16px 14px;}
+  .umbrella.open .u-body{display:block;}
+
+  .subgroup{margin-top:10px;}
+  .s-head{
+    display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
+    padding:4px 0;
+  }
+  .s-name{font-size:12.5px; font-weight:600; color:var(--text-dim);}
+  .s-count{font-size:11px; color:var(--text-faint);}
+  .s-chev{font-size:9px; color:var(--text-faint); transition:transform .15s ease;}
+  .subgroup.open .s-chev{transform:rotate(90deg);}
+  .s-body{display:none; padding:8px 0 2px 2px; flex-wrap:wrap; gap:6px;}
+  .subgroup.open .s-body{display:flex;}
+
+  .chip{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px; padding:4px 8px; border-radius:6px;
+    background:var(--panel2); border:1px solid var(--border-soft); color:var(--text-dim);
+    white-space:nowrap;
+  }
+  .chip mark{background:var(--accent-dim); color:var(--accent); border-radius:3px; padding:0 1px;}
+  .chip.hidden{display:none;}
+
+  .subgroup.hidden{display:none;}
+
+  mark.head-mark{background:var(--accent-dim); color:var(--accent); border-radius:3px; padding:0 1px;}
+
+  footer{margin-top:26px; font-size:11.5px; color:var(--text-faint); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>MaxText <code style="font-weight:400">base.yml</code> — config mind map</h1>
+    <p class="sub">688 parameters &middot; 15 umbrella categories &middot; navigate or search to find where a setting lives</p>
+  </header>
+
+  <div class="searchbar">
+    <input id="search" type="text" placeholder="Search a parameter name (e.g. sliding_window, remat, dcn_fsdp)…" autocomplete="off">
+    <div class="meta-row">
+      <span id="resultcount"></span>
+      <div class="btnrow">
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tree"></div>
+  <div id="nomatch">No parameters match that search.</div>
+
+  <footer>Generated from base.yml &middot; grouping is a navigation aid, not an explanation of what each parameter does</footer>
+</div>
+
+<script>
+const DATA = [{"name":"Run & general setup","subs":[{"name":"Run identity","keys":["model_name","normalization_layer_epsilon","override_logical_axis_rules","override_model_config","run_name"]},{"name":"Misc / testing","keys":["force_q_layout","record_internal_nn_metrics","reuse_example_batch","use_jax_splash","use_tokamax_splash"]},{"name":"Metrics files","keys":["gcs_metrics","metrics_file","save_config_to_gcs"]},{"name":"Weights & Biases","keys":["enable_wandb","wandb_project_name","wandb_run_name"]},{"name":"Output paths","keys":["base_output_directory","jax_cache_dir"]},{"name":"JAX distributed init","keys":["jax_debug_log_modules","jax_distributed_initialization_timeout","skip_jax_distributed_system"]},{"name":"vLLM adapter","keys":["vllm_additional_config","vllm_hf_config_path","vllm_hf_overrides"]}],"count":24},{"name":"Checkpointing & loading","subs":[{"name":"Loading checkpoints / LoRA","keys":["hf_lora_adapter_path","load_full_state_path","load_parameters_path","lora_input_adapters_path"]},{"name":"Checkpoint save behavior","keys":["async_checkpointing","checkpoint_period","checkpoint_todelete_full_path","checkpoint_todelete_subdir","enable_autocheckpoint","enable_checkpointing","enable_continuous_checkpointing","enable_single_replica_ckpt_restoring","force_unroll","max_num_checkpoints_to_keep","save_checkpoint_on_completion","save_checkpoint_on_start"]},{"name":"Orbax storage backend","keys":["checkpoint_conversion_fn","checkpoint_storage_concurrent_gb","checkpoint_storage_target_data_file_size_bytes","checkpoint_storage_use_ocdbt","checkpoint_storage_use_zarr3","enable_orbax_v1","source_checkpoint_layout"]},{"name":"Multi-tier / emergency checkpointing","keys":["enable_emergency_checkpoint","enable_multi_tier_checkpointing","local_checkpoint_directory","local_checkpoint_period","mtc_data_parallelism","multi_tier_checkpointing_backup_interval_minutes","multi_tier_checkpointing_backup_interval_steps"]}],"count":30},{"name":"Precision & quantization","subs":[{"name":"Core dtypes","keys":["dtype","grad_dtype","weight_dtype"]},{"name":"AQT / general quantization","keys":["activations_in_float32","constant_bound_config","matmul_precision","model_call_mode","quant_cfg_path","quantization","replicate_quant_scale"]},{"name":"KV cache quantization","keys":["kv_quant_axis","kv_quant_dtype","quantize_kvcache"]},{"name":"Quantized checkpoints","keys":["checkpoint_is_quantized","save_quantized_params_path"]},{"name":"Qwix quantization","keys":["act_quantization_calibration_method","bwd_quantization_calibration_method","quantization_local_shard_count","use_qwix_quantization","weight_quantization_calibration_method"]},{"name":"N:M weight sparsity","keys":["weight_sparsity_m","weight_sparsity_n","weight_sparsity_start_step","weight_sparsity_update_step"]},{"name":"Transformer Engine comm overlap","keys":["te_comm_gemm_overlap"]},{"name":"FP32 upcasting for stability","keys":["cast_logits_to_fp32","float32_gate_logits","float32_logits","float32_qk_product","float32_weight_sum","logits_dot_in_fp32","mla_qk_head_chunk_size"]},{"name":"Fused matmuls","keys":["fused_mlp","fused_qkv"]}],"count":34},{"name":"Core model architecture","subs":[{"name":"Base dimensions","keys":["attention_output_dim","base_emb_dim","base_mlp_dim","base_num_decoder_layers","base_num_kv_heads","base_num_query_heads","decoder_block","dense_init_scale","global_head_dim","global_num_kv_heads","global_parameter_scale","head_dim"]},{"name":"MLP & embeddings","keys":["dropout_rate","logits_via_embedding","mlp_activations","mlp_activations_limit","normalize_embedding_logits"]},{"name":"Multi-token prediction","keys":["mtp_eval_target_module","mtp_loss_scaling_factor","mtp_num_layers"]},{"name":"Layer structure","keys":["inhomogeneous_layer_cycle_interval","interleave_moe_layer_step","nope_layer_interval","temperature_tuning"]},{"name":"Gemma4-small layer sharing","keys":["hidden_size_per_layer_input","num_kv_shared_layers","use_double_wide_mlp","vocab_size_per_layer_input"]},{"name":"Vocabulary","keys":["num_vocab_tiling","vocab_size"]},{"name":"Positional embeddings","keys":["trainable_position_size","use_iota_embed","use_untrainable_positional_embedding"]}],"count":33},{"name":"Mixture of Experts (MoE)","subs":[{"name":"MoE kernels & sparse matmul","keys":["merge_gating_gmm","moe_dispatch_no_expert_sharding","num_moe_emb_chunks","ragged_gather_cost_estimate_bytes_accessed","ragged_gather_cost_estimate_flops","ragged_gather_fallback","ragged_gather_reduce_cost_estimate_bytes_accessed","ragged_gather_reduce_cost_estimate_flops","ragged_gather_reduce_fallback","use_custom_sort_vjp","use_gather_mosaic_kernel","use_gmm_v2","use_manual_quantization","use_ragged_sort","use_ring_of_experts","use_tokamax_gmm","wi_tile_dlhs_batch_seq","wi_tile_dlhs_embed_dim","wi_tile_dlhs_mlp_dim","wi_tile_drhs_batch_seq","wi_tile_drhs_embed_dim","wi_tile_drhs_mlp_dim","wi_tile_fwd_batch_seq","wi_tile_fwd_embed_dim","wi_tile_fwd_mlp_dim","wo_tile_dlhs_batch_seq","wo_tile_dlhs_embed_dim","wo_tile_dlhs_mlp_dim","wo_tile_drhs_batch_seq","wo_tile_drhs_embed_dim","wo_tile_drhs_mlp_dim","wo_tile_fwd_batch_seq","wo_tile_fwd_embed_dim","wo_tile_fwd_mlp_dim"]},{"name":"MoE core & routing","keys":["base_moe_mlp_dim","capacity_factor","load_balance_loss_weight","megablox","moe_chunk_barrier","moe_expert_input_dim","norm_topk_prob","num_experts","num_experts_per_tok","num_moe_token_chunks","ragged_buffer_factor","sparse_matmul","use_random_routing"]},{"name":"MoE sharding","keys":["moe_fsdp_use_two_stage_all_gather","shard_exp_on_fsdp","use_2d_fsdp_sharding"]},{"name":"DeepSeek-style MoE (routing groups, bias)","keys":["batch_split_factor","first_num_dense_layers","first_num_hash_layers","mlp_bias","n_routing_groups","routed_bias","routed_bias_update_rate","routed_scaling_factor","routed_score_func","shared_experts","topk_routing_group","use_batch_split_schedule"]}],"count":62},{"name":"Pipeline parallelism & rematerialization","subs":[{"name":"Pipeline parallelism","keys":["dcn_pipeline_parallelism","ici_pipeline_parallelism","num_layers_per_pipeline_stage","num_pipeline_microbatches","num_pipeline_repeats","pipeline_delay_activation_forwarding","pipeline_fsdp_ag_once","pipeline_fsdp_ag_per_repeat","pipeline_parallel_layers","scan_layers_per_stage","scan_pipeline_iterations","scan_pipeline_repeats","set_remat_policy_on_pipeline_iterations"]},{"name":"Rematerialization policy","keys":["remat_policy","set_remat_policy_on_layers_per_stage"]},{"name":"Per-tensor remat targets","keys":["attention_out","context","decoder_layer_input","engram","key_proj","kv_proj","kv_wa_proj","mla_kv","mla_q","mlpwi","mlpwi_0","mlpwi_1","mlpwo","moe_mlpwi_0","moe_mlpwi_1","moe_mlpwo","out_proj","qkv_proj","query_proj","query_wa_proj","value_proj"]},{"name":"Host offload","keys":["optimizer_memory_host_offload","parameter_memory_host_offload"]},{"name":"Layer scanning","keys":["param_scan_axis","scan_layers"]}],"count":40},{"name":"Attention mechanisms","subs":[{"name":"DeepSeek Sparse Attention (indexer)","keys":["indexer_approx_top_k_recall","indexer_cutoff_threshold","indexer_head_dim","indexer_loss_scaling_factor","indexer_mask_exact_topk","indexer_n_heads","indexer_sparse_training","indexer_topk","indexer_use_approx_top_k","use_indexer"]},{"name":"Attention type & variants","keys":["attention","attention_bias","attention_sink","attention_type","attn_logits_soft_cap","causal_block_size","chunk_attn_window_size","final_logits_soft_cap","qk_norm_with_scale","share_kv_projections","sliding_window_size","use_post_attn_norm","use_post_ffw_norm","use_qk_norm","v_norm_with_scale","z_loss_multiplier"]},{"name":"Multi-head Latent Attention (MLA)","keys":["kv_lora_rank","mla_naive_kvcache","q_lora_rank","qk_nope_head_dim","qk_rope_head_dim","use_sliced_mla_proj","v_head_dim"]},{"name":"Mixture of Block Attention (MoBA)","keys":["moba","moba_chunk_size","moba_topk"]},{"name":"Compressed attention","keys":["compress_ratios","compressed_rope_max_timescale","o_groups","o_lora_rank"]},{"name":"QK-Clip (Muon Clip)","keys":["qk_clip_threshold","use_qk_clip"]},{"name":"Attention misc","keys":["enable_padding_causal_mask","reshape_q"]},{"name":"Ragged attention","keys":["ragged_block_size","use_ragged_attention"]},{"name":"Splash attention kernel block sizes","keys":["cost_estimate_flops_bwd","cost_estimate_flops_fwd","dq_reduction_steps","experimental_sa_quant_k_fp8","experimental_sa_quant_q_fp8","local_sa_block_kv","local_sa_block_kv_compute","local_sa_block_kv_dkv","local_sa_block_kv_dkv_compute","local_sa_block_kv_dq","local_sa_block_q","local_sa_block_q_dkv","local_sa_block_q_dq","local_sa_fuse_reciprocal","local_sa_k_layout","local_sa_q_layout","local_sa_use_base2_exp","local_sa_use_fused_bwd_kernel","local_sa_v_layout","local_use_splash_scheduler","ring_scan_unroll","sa_block_kv","sa_block_kv_compute","sa_block_kv_dkv","sa_block_kv_dkv_compute","sa_block_kv_dq","sa_block_q","sa_block_q_dkv","sa_block_q_dq","sa_bwd_dkv_megacore","sa_fuse_reciprocal","sa_k_layout","sa_q_layout","sa_use_base2_exp","sa_use_fused_bwd_kernel","sa_v_layout","use_max_logit_estimate","use_splash_scheduler"]},{"name":"Context parallelism (attention)","keys":["context_parallel_load_balance","context_parallel_reorder_strategy","context_parallel_strategy"]},{"name":"Chunked prefill / prefix cache","keys":["enable_prefix_caching","prefill_chunk_size","prefix_caching_dram_byte","prefix_caching_hbm_byte","use_chunked_prefill"]}],"count":92},{"name":"Hardware, mesh & sharding","subs":[{"name":"Pathways / single controller","keys":["colocated_python_checkpointing","colocated_python_data_input","subslice_shape"]},{"name":"Compilation / device targeting","keys":["compile_xla_flags","hardware","internal_compile","internal_compile_num_devices"]},{"name":"Mesh & logical axis rules","keys":["allow_split_physical_axes","context_sharding","custom_mesh","custom_mesh_and_rule","custom_mesh_and_rule_for_eval","data_sharding","enable_single_controller","input_data_sharding_logical_axes","logical_axis_rules","logical_axis_rules_for_eval","mesh_axes","optimize_mesh_for_tpu_v6e","remove_size_one_mesh_axis_from_type","shard_mode","sharding_tolerance","shardy","ulysses_context_sharding"]},{"name":"DCN (multi-slice) parallelism","keys":["dcn_autoregressive_parallelism","dcn_context_autoregressive_parallelism","dcn_context_parallelism","dcn_context_usp_ulysses_parallelism","dcn_data_parallelism","dcn_diloco_parallelism","dcn_expert_parallelism","dcn_fsdp_parallelism","dcn_fsdp_transpose_parallelism","dcn_sequence_parallelism","dcn_tensor_parallelism","dcn_tensor_sequence_parallelism"]},{"name":"ICI (within-slice) parallelism","keys":["ici_autoregressive_parallelism","ici_context_autoregressive_parallelism","ici_context_parallelism","ici_context_usp_ulysses_parallelism","ici_data_parallelism","ici_diloco_parallelism","ici_expert_parallelism","ici_fsdp_parallelism","ici_fsdp_transpose_parallelism","ici_sequence_parallelism","ici_tensor_parallelism","ici_tensor_sequence_parallelism"]},{"name":"Sharding options","keys":["check_vma","dense_fsdp_use_two_stage_all_gather","num_slices","shard_optimizer_over_data"]},{"name":"NNX backend","keys":["enable_nnx","pure_nnx","pure_nnx_decoder"]}],"count":55},{"name":"Tokenizer & dataset / data pipeline","subs":[{"name":"Tokenizer","keys":["add_bos","add_eos","chat_template","chat_template_path","tokenize_eval_data","tokenize_train_data","tokenizer_path","tokenizer_type","use_chat_template","use_truncation"]},{"name":"Batching","keys":["eval_per_device_batch_size","expansion_factor_real_data","max_corpus_chars","per_device_batch_size"]},{"name":"Data pipeline","keys":["default_prompt","eval_data_columns","eval_image_column","generate_padding_batch_eval","generate_padding_batch_train","max_segments_per_seq","num_epoch","packing","train_data_columns","train_image_column"]},{"name":"Batch size rampup","keys":["enable_rampup_batch_size","global_rampup_samples","per_device_batch_size_increment","per_device_batch_size_start"]},{"name":"DPO / SFT","keys":["sft_train_on_completion_only","use_dpo","use_sft"]},{"name":"Dataset source","keys":["dataset_name","dataset_path","dataset_type","eval_dataset_name","eval_split","train_split"]},{"name":"HuggingFace dataset","keys":["hf_access_token","hf_data_dir","hf_eval_files","hf_eval_split","hf_name","hf_path","hf_train_files"]},{"name":"Grain data loader","keys":["grain_data_source_max_workers","grain_eval_files","grain_file_type","grain_num_threads","grain_num_threads_eval","grain_packing_type","grain_per_worker_buffer_size","grain_per_worker_buffer_size_eval","grain_prefetch_buffer_size","grain_prefetch_buffer_size_eval","grain_ram_budget_mb","grain_shuffle_buffer_size","grain_train_files","grain_train_mixture_config_path","grain_use_elastic_iterator","grain_worker_count","grain_worker_count_eval"]},{"name":"OLMo data source","keys":["olmo_apply_ngram_filter","olmo_index_path","olmo_path_remap_from","olmo_path_remap_to"]},{"name":"Training objective","keys":["block_diffusion_canvas_policy","block_diffusion_logit_alignment","block_diffusion_mask_id","block_diffusion_min_noise","log_period","max_inflight_computations","steps","training_objective"]}],"count":73},{"name":"Training loop, optimizer & LR schedule","subs":[{"name":"LR schedule","keys":["learning_rate","learning_rate_final_fraction","learning_rate_schedule_steps","lr_schedule_type","warmup_steps_fraction","wsd_decay_steps_fraction","wsd_decay_style"]},{"name":"Training loop misc","keys":["data_shuffle_seed","enable_data_shuffling","enable_dropout","init_weights_seed"]},{"name":"DiLoCo distributed optimization","keys":["dcn_bandwidth_burst","dcn_bandwidth_interface","dcn_bandwidth_latency","dcn_bandwidth_limit","diloco_outer_lr","diloco_outer_momentum","diloco_sync_period","enable_diloco"]},{"name":"Optimizer core","keys":["gradient_accumulation_steps","gradient_clipping_threshold","opt_type","skip_step_interval","skip_step_on_spikes","skip_step_scaling_factor","trainable_parameters_mask"]},{"name":"Adam / AdamW","keys":["adam_b1","adam_b2","adam_eps","adam_eps_root","adam_weight_decay","adamw_mask","mu_dtype"]},{"name":"Muon optimizer","keys":["muon_beta","muon_consistent_rms","muon_weight_decay"]}],"count":36},{"name":"RoPE, eval & decode","subs":[{"name":"Decode / prefill setup","keys":["autoregressive_decode_assert","load_from_prefill_dir","max_prefill_predict_length","max_target_length","prefill_cache_dir","prompt"]},{"name":"RoPE","keys":["beta_fast","beta_slow","global_rope_max_timescale","global_rope_proportion","local_rope_max_timescale","local_rope_proportion","max_position_embeddings","mscale","original_max_position_embeddings","rope_attention_scaling","rope_factor","rope_interleave","rope_linear_scaling_factor","rope_max_timescale","rope_min_timescale","rope_pairwise","rope_truncate","rope_type","rope_use_scale"]},{"name":"Decode sampling","keys":["decode_sampling_nucleus_p","decode_sampling_strategy","decode_sampling_temperature","decode_sampling_top_k"]},{"name":"Evaluation loop","keys":["abort_on_inf_loss","abort_on_nan_loss","eval_interval","eval_start_step","eval_steps","target_eval_loss"]}],"count":35},{"name":"Inference serving & KV cache layout","subs":[{"name":"AOT compilation","keys":["compile_topology","compile_topology_num_slices","compiled_trainstep_file","write_estimator_result"]},{"name":"Inference microbenchmarking","keys":["inference_microbenchmark_log_file_path","inference_microbenchmark_loop_iters","inference_microbenchmark_num_samples","inference_microbenchmark_prefill_lengths","inference_microbenchmark_stages"]},{"name":"Inference serving","keys":["enable_llm_inference_pool","enable_model_warmup","generate_slice","inference_benchmark_test","inference_metadata_file","inference_server","multi_sampling","prefill_slice","return_log_prob"]},{"name":"KV cache layout","keys":["ar_cache_axis_order","compute_axis_order","prefill_cache_axis_order","stack_prefill_result_cache"]}],"count":22},{"name":"Multimodal (vision + audio)","subs":[{"name":"Multimodal general","keys":["audio_path","audio_placeholder","dtype_mm","freeze_audio_encoder_params","freeze_vision_encoder_params","image_path","image_placeholder","max_num_images_per_example","use_audio","use_audio_in_video","use_multimodal","video_max_grid_h","video_max_grid_t","video_max_grid_w","video_path","video_placeholder","vision_output_length"]},{"name":"Vision encoder (ViT)","keys":["conv_stride_for_vit","deepstack_visual_indexes_for_vit","hidden_size_for_vit","image_size_for_vit","intermediate_size_for_vit","num_attention_heads_for_vit","num_channels_for_vit","num_hidden_layers_for_vit","num_position_embeddings_for_vit","out_hidden_size_for_vit","patch_size_for_vit","pixel_shuffle_ratio_for_vit","posemb_type_for_vit","projector_dropout_for_vit","projector_input_dim_for_vit","projector_output_dim_for_vit","remat_policy_for_vit","rope_theta_for_vit","spatial_merge_size_for_vit","temporal_patch_size_for_vit","tile_size_for_vit","vision_output_dim_for_vit"]},{"name":"Audio encoder","keys":["activation_dropout_for_audio","activation_function_for_audio","attention_dropout_for_audio","conv_chunksize_for_audio","d_model_for_audio","downsample_hidden_size_for_audio","encoder_attention_heads_for_audio","encoder_ffn_dim_for_audio","encoder_layers_for_audio","max_sample_len_for_audio","max_source_positions_for_audio","max_timescale_for_audio","n_window_for_audio","n_window_infer_for_audio","num_conv_layers_for_audio","num_mel_bins_for_audio","output_dim_for_audio","scale_embedding_for_audio"]},{"name":"M-RoPE (video/position)","keys":["mrope_section","position_id_per_seconds","use_mrope"]}],"count":60},{"name":"Qwen3-Next / mHC / Engram / Distillation / Elastic","subs":[{"name":"Gated Delta Net (Qwen3-Next)","keys":["gdn_chunk_size","gdn_conv_kernel_dim","gdn_key_head_dim","gdn_num_key_heads","gdn_num_value_heads","gdn_value_head_dim","partial_rotary_factor","use_qk_norm_in_gdn"]},{"name":"Manifold-Constrained Hyper Connections","keys":["enable_mhc_lite","mhc_expansion_rate","mhc_pallas_kernel_bwd_block_size","mhc_pallas_kernel_fwd_block_size","sinkhorn_iterations","use_mhc_pallas_kernel"]},{"name":"DeepSeek Engram","keys":["engram_head_dim","engram_kernel_size","engram_layers","engram_max_ngram_size","engram_num_heads","engram_seed","engram_vocab_bases"]},{"name":"Distillation","keys":["distill_alpha","distill_alpha_end","distill_alpha_schedule","distill_beta","distill_beta_end","distill_beta_schedule","distill_feature_loss_type","distill_layer_indices","distill_temperature","distill_temperature_end","distill_temperature_schedule"]},{"name":"Elastic training","keys":["elastic_backup_kind","elastic_enabled","elastic_max_retries","elastic_min_slice_count","elastic_timeout_seconds"]}],"count":37},{"name":"Profiling, debugging & monitoring","subs":[{"name":"Profiler","keys":["hide_profiler_step_metric","profile_cleanly","profile_periodically_period","profiler","profiler_steps","skip_first_n_steps_for_profiler","upload_all_profiler_results"]},{"name":"TPU profiling","keys":["enable_tpu_profiling_options","tpu_num_chips_to_profile_per_task","tpu_num_sparse_core_tiles_to_trace","tpu_num_sparse_cores_to_trace"]},{"name":"Managed ML diagnostics","keys":["managed_mldiagnostics","managed_mldiagnostics_on_demand_profiling","managed_mldiagnostics_region","managed_mldiagnostics_run_group"]},{"name":"HLO / Jaxpr dumping","keys":["dump_hlo","dump_hlo_delete_local_after","dump_hlo_gcs_dir","dump_hlo_local_dir","dump_hlo_local_module_name","dump_hlo_module_name","dump_hlo_upload_all","dump_hlo_xla_flags","dump_jaxpr","dump_jaxpr_delete_local_after","dump_jaxpr_gcs_dir","dump_jaxpr_local_dir","dump_step"]},{"name":"Goodput monitoring","keys":["enable_gcp_goodput_metrics","enable_gcp_step_deviation_metrics","enable_goodput_recording","enable_pathways_goodput","goodput_upload_interval_seconds","monitor_goodput","monitor_step_time_deviation","step_deviation_interval_seconds"]},{"name":"GCP monitoring","keys":["heartbeat_reporting_interval_in_seconds","report_heartbeat_metric_for_gcp_monitoring","report_performance_metric_for_gcp_monitoring"]},{"name":"Tensorboard","keys":["enable_tensorboard","use_vertex_tensorboard","vertex_tensorboard_project","vertex_tensorboard_region"]},{"name":"Logging & debugging","keys":["debug_sharding","enable_checkpoint_cloud_logger","log_config","max_checkify"]},{"name":"Ports (Prometheus / JAX profiler)","keys":["enable_jax_profiler","jax_profiler_port","prometheus_port"]},{"name":"Xprof power tracing","keys":["profile_power_events","xprof_e2e_enable_fw_power_level_event","xprof_e2e_enable_fw_thermal_event","xprof_e2e_enable_fw_throttle_event","xprof_tpu_power_trace_level"]}],"count":55}]
+;
+
+const COLORS = ["c1","c2","c3","c4","c5","c6","c7","c8","c9","c1","c2","c3","c4","c5"];
+
+const treeEl = document.getElementById('tree');
+const searchEl = document.getElementById('search');
+const resultcountEl = document.getElementById('resultcount');
+const nomatchEl = document.getElementById('nomatch');
+
+function render(){
+  treeEl.innerHTML = '';
+  DATA.forEach((umb, ui) => {
+    const uDiv = document.createElement('div');
+    uDiv.className = 'umbrella';
+    uDiv.dataset.uindex = ui;
+
+    const head = document.createElement('div');
+    head.className = 'u-head';
+    head.innerHTML = `
+      <div class="u-left">
+        <span class="u-dot" style="background:var(--${COLORS[ui % COLORS.length]})"></span>
+        <span class="u-name">${umb.name}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="u-count">${umb.count}</span>
+        <span class="chev">&#9656;</span>
+      </div>`;
+    head.addEventListener('click', () => uDiv.classList.toggle('open'));
+    uDiv.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'u-body';
+
+    umb.subs.forEach((sub, si) => {
+      const sDiv = document.createElement('div');
+      sDiv.className = 'subgroup';
+      sDiv.dataset.sindex = si;
+
+      const sHead = document.createElement('div');
+      sHead.className = 's-head';
+      sHead.innerHTML = `<span class="s-chev">&#9656;</span><span class="s-name">${sub.name}</span><span class="s-count">${sub.keys.length}</span>`;
+      sHead.addEventListener('click', (e) => { e.stopPropagation(); sDiv.classList.toggle('open'); });
+      sDiv.appendChild(sHead);
+
+      const sBody = document.createElement('div');
+      sBody.className = 's-body';
+      sub.keys.forEach(k => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = k;
+        chip.dataset.key = k;
+        sBody.appendChild(chip);
+      });
+      sDiv.appendChild(sBody);
+      body.appendChild(sDiv);
+    });
+
+    uDiv.appendChild(body);
+    treeEl.appendChild(uDiv);
+  });
+}
+
+function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function applySearch(q){
+  q = q.trim().toLowerCase();
+  const umbrellas = treeEl.querySelectorAll('.umbrella');
+  let totalMatches = 0;
+
+  if(q === ''){
+    umbrellas.forEach(u => {
+      u.classList.remove('hidden');
+      u.classList.remove('open');
+      u.querySelectorAll('.subgroup').forEach(s => { s.classList.remove('hidden'); s.classList.remove('open'); });
+      u.querySelectorAll('.chip').forEach(c => { c.classList.remove('hidden'); c.innerHTML = c.dataset.key; });
+      const nameEl = u.querySelector('.u-name'); nameEl.innerHTML = nameEl.textContent;
+    });
+    resultcountEl.textContent = '';
+    nomatchEl.style.display = 'none';
+    return;
+  }
+
+  const re = new RegExp('(' + escapeRegExp(q) + ')', 'ig');
+
+  umbrellas.forEach(u => {
+    let umbMatches = 0;
+    const nameEl = u.querySelector('.u-name');
+    const umbNameMatches = nameEl.textContent.toLowerCase().includes(q);
+
+    u.querySelectorAll('.subgroup').forEach(s => {
+      let subMatches = 0;
+      s.querySelectorAll('.chip').forEach(c => {
+        const key = c.dataset.key;
+        if(key.toLowerCase().includes(q)){
+          c.innerHTML = key.replace(re, '<mark>$1</mark>');
+          c.classList.remove('hidden');
+          subMatches++;
+        } else {
+          c.classList.add('hidden');
+        }
+      });
+      if(subMatches > 0){
+        s.classList.remove('hidden');
+        s.classList.add('open');
+      } else {
+        s.classList.add('hidden');
+      }
+      umbMatches += subMatches;
+    });
+
+    if(umbMatches > 0 || umbNameMatches){
+      u.classList.remove('hidden');
+      u.classList.add('open');
+      totalMatches += umbMatches;
+    } else {
+      u.classList.add('hidden');
+    }
+  });
+
+  resultcountEl.textContent = totalMatches + ' match' + (totalMatches === 1 ? '' : 'es');
+  nomatchEl.style.display = totalMatches === 0 ? 'block' : 'none';
+}
+
+searchEl.addEventListener('input', () => applySearch(searchEl.value));
+
+document.getElementById('expandAll').addEventListener('click', () => {
+  treeEl.querySelectorAll('.umbrella').forEach(u => u.classList.add('open'));
+  treeEl.querySelectorAll('.subgroup').forEach(s => s.classList.add('open'));
+});
+document.getElementById('collapseAll').addEventListener('click', () => {
+  treeEl.querySelectorAll('.umbrella').forEach(u => u.classList.remove('open'));
+  treeEl.querySelectorAll('.subgroup').forEach(s => s.classList.remove('open'));
+});
+
+render();
+</script>
+</body>
+</html>
