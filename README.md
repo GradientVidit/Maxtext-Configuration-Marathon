@@ -18,6 +18,15 @@ Each category has a summary table file (the starting point) and one `.md` file p
 | `2. Logging-Misc + Precision & Quantization.md` | Metrics, dtype, quantization flags |
 | `3. Core Model Architecture.md` | Embedding dims, heads, layers, attention, MLP |
 | `4. Mixture of Experts (MoE).md` | MoE-specific routing and capacity params |
+| `5. Pipeline Parallelism + Rematerialization.md` | Pipeline stages, microbatches, remat policies |
+| `6. Attention Mechanisms.md` | Attention types, MLA, GQA, sliding window, KV cache |
+| `7. Hardware + Sharding or Mesh.md` | Hardware selection, mesh axes, ICI/DCN parallelism, Splash Attention tuning |
+| `8. Tokenizer + Dataset & Data Pipeline.md` | Tokenizer config, Grain/HF data loading, packing, shuffling |
+| `9. Training Loop, LR Schedule, Optimizer & Profiling.md` | Steps, learning rate, Adam/Muon, gradient clipping, profiler |
+| `10. RoPE, Eval-Decode, AOT Compilation & Monitoring.md` | RoPE variants, eval/decode params, ahead-of-time compile, GCP monitoring |
+| `11. Inference Serving + KV Cache Layout.md` | Inference server, prefill/decode cache, prefix caching |
+| `12. Multimodal (Vision + Audio).md` | ViT encoder, audio encoder, multimodal data params |
+| `13. Qwen3-Next, mHC, Engram, Distillation, Elastic Training.md` | GDN linear attention, hyper connections, Engram n-gram memory, knowledge distillation, elastic training |
 
 Individual parameter deep-dives live as flat `.md` files (e.g. `run_name.md`, `checkpoint_period.md`). Each covers:
 
@@ -41,6 +50,4 @@ Without Obsidian, every file is plain Markdown and readable in any editor or ren
 
 ## Scope
 
-Currently covers **Section 1: General Run Setup + Checkpointing** — all 29 parameters fully documented.
-
-Remaining sections (Logging, Precision/Quantization, Architecture, MoE) are in progress.
+**Complete.** All 13 sections are fully documented — ~640 individual parameter deep-dives covering the entire `base.yml` surface, from core run setup through inference serving, multimodal, distillation, and elastic training.
